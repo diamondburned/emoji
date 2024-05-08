@@ -5,6 +5,7 @@ import (
 	"unicode"
 
 	"github.com/puzpuzpuz/xsync/v3"
+	"golang.org/x/text/unicode/rangetable"
 	"libdb.so/go-emoji/data"
 )
 
@@ -12,9 +13,9 @@ import (
 const ZWJ = '\u200d'
 
 // IsEmoji returns true if the specified rune has the (single-character)
-// Emoji property in the latest Emoji version, false otherwise
+// Emoji property in the latest Emoji version, false otherwise.
 func IsEmoji(r rune) bool {
-	return r > 0x7F && unicode.Is(Latest.RangeTable(data.Emoji), r)
+	return r > 0x7F && unicode.Is(Latest.MergedRangeTable(), r)
 }
 
 // DisplayWidth attempts to guess at the display width of a string containing
@@ -94,6 +95,22 @@ func (v Version) FileBytes(t data.FileType) []byte {
 	return nil
 }
 
+// MergedRangeTable returns the Unicode range table for all characters with all
+// properties in this Emoji version. The list of properties can be found in
+// [data.AllProperties]. Note that the range table reflects the ranges as
+// defined in the source files from Unicode.org; ranges are guaranteed not to
+// overlap, as per the RangeTable docs, but adjacent ranges are not coalesced.
+func (v Version) MergedRangeTable() *unicode.RangeTable {
+	tables, _ := mergedRangeTables.LoadOrCompute(v, func() *unicode.RangeTable {
+		tables := make([]*unicode.RangeTable, len(data.AllProperties))
+		for i, property := range data.AllProperties {
+			tables[i] = v.RangeTable(property)
+		}
+		return rangetable.Merge(tables...)
+	})
+	return tables
+}
+
 // RangeTable returns the Unicode range table for characters with the specified property
 // in this Emoji version. Note that the range table reflects the ranges as defined in the
 // source files from Unicode.org; ranges are guaranteed not to overlap, as per the RangeTable
@@ -139,8 +156,9 @@ func (v Version) Sequences(seqType data.SeqType) []string {
 // Unexported symbols
 
 var (
-	rangeTables = xsync.NewMapOf[Version, *xsync.MapOf[data.Property, *unicode.RangeTable]]()
-	sequences   = xsync.NewMapOf[Version, *xsync.MapOf[data.SeqType, []string]]()
+	mergedRangeTables = xsync.NewMapOf[Version, *unicode.RangeTable]()
+	rangeTables       = xsync.NewMapOf[Version, *xsync.MapOf[data.Property, *unicode.RangeTable]]()
+	sequences         = xsync.NewMapOf[Version, *xsync.MapOf[data.SeqType, []string]]()
 )
 
 func isRegionalIndicator(r rune) bool {
