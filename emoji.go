@@ -14,7 +14,7 @@ const ZWJ = '\u200d'
 // IsEmoji returns true if the specified rune has the (single-character)
 // Emoji property in the latest Emoji version, false otherwise
 func IsEmoji(r rune) bool {
-	return unicode.Is(Latest.RangeTable(data.Emoji), r)
+	return r > 0x7F && unicode.Is(Latest.RangeTable(data.Emoji), r)
 }
 
 // DisplayWidth attempts to guess at the display width of a string containing
