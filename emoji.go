@@ -2,8 +2,9 @@ package emoji
 
 import (
 	"fmt"
-	. "github.com/dmolesUC/emoji/data"
 	"unicode"
+
+	. "github.com/dmolesUC/emoji/data"
 )
 
 // ZWJ is the Unicode zero-width join character
@@ -25,7 +26,7 @@ func IsEmoji(r rune) bool {
 func DisplayWidth(str string) int {
 	width := 0
 	runes := []rune(str)
-	for i := 0; i < len(runes); i ++ {
+	for i := 0; i < len(runes); i++ {
 		r := runes[i]
 		if isZeroWidth(r) {
 			continue

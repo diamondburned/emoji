@@ -6,10 +6,10 @@ type SeqType string
 
 const (
 	Emoji_Combining_Sequence SeqType = "Emoji_Combining_Sequence"
-	Emoji_Flag_Sequence SeqType = "Emoji_Flag_Sequence"
-	Emoji_Modifier_Sequence SeqType = "Emoji_Modifier_Sequence"
-	Emoji_Tag_Sequence SeqType = "Emoji_Tag_Sequence"
-	Emoji_ZWJ_Sequence SeqType = "Emoji_ZWJ_Sequence"
+	Emoji_Flag_Sequence      SeqType = "Emoji_Flag_Sequence"
+	Emoji_Modifier_Sequence  SeqType = "Emoji_Modifier_Sequence"
+	Emoji_Tag_Sequence       SeqType = "Emoji_Tag_Sequence"
+	Emoji_ZWJ_Sequence       SeqType = "Emoji_ZWJ_Sequence"
 )
 
 // AllSeqTypes lists all Unicode emoji sequence types.

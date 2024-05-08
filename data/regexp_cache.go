@@ -16,10 +16,10 @@ var rangeRegexp = getRegexp(rangePattern)
 var singleRegexp = getRegexp(singlePattern)
 var seqRegexp = regexp.MustCompile(seqPattern)
 
-var legacySeqTypeRegexps = map[SeqType]*regexp.Regexp {
-	Emoji_Flag_Sequence: regexp.MustCompile("flag for"),
+var legacySeqTypeRegexps = map[SeqType]*regexp.Regexp{
+	Emoji_Flag_Sequence:      regexp.MustCompile("flag for"),
 	Emoji_Combining_Sequence: regexp.MustCompile("keycap"),
-	Emoji_Modifier_Sequence: regexp.MustCompile("type-[0-9]"),
+	Emoji_Modifier_Sequence:  regexp.MustCompile("type-[0-9]"),
 }
 
 var regexpCache = map[string]*regexp.Regexp{}
