@@ -5,7 +5,7 @@ import (
 	"unicode"
 
 	"github.com/dmolesUC/emoji/data"
-	"github.com/puzpuzpuz/xsync"
+	"github.com/puzpuzpuz/xsync/v3"
 )
 
 // ZWJ is the Unicode zero-width join character
