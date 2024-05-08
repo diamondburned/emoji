@@ -100,9 +100,7 @@ func (v Version) FileBytes(t data.FileType) []byte {
 // docs, but adjacent ranges are not coalesced.
 func (v Version) RangeTable(property data.Property) *unicode.RangeTable {
 	rtsByProperty, _ := rangeTables.LoadOrCompute(v, func() *xsync.MapOf[data.Property, *unicode.RangeTable] {
-		return xsync.NewTypedMapOf[data.Property, *unicode.RangeTable](func(p data.Property) uint64 {
-			return xsync.StrHash64(string(p))
-		})
+		return xsync.NewMapOfPresized[data.Property, *unicode.RangeTable](len(data.AllProperties))
 	})
 	rt, _ := rtsByProperty.LoadOrCompute(property, func() *unicode.RangeTable {
 		return data.ParseRangeTable(property, v.FileBytes(data.Data))
@@ -113,11 +111,8 @@ func (v Version) RangeTable(property data.Property) *unicode.RangeTable {
 // Sequences returns the Unicode emoji sequences of the specified type in this Emoji version.
 func (v Version) Sequences(seqType data.SeqType) []string {
 	seqsByType, _ := sequences.LoadOrCompute(v, func() *xsync.MapOf[data.SeqType, []string] {
-		return xsync.NewTypedMapOf[data.SeqType, []string](func(s data.SeqType) uint64 {
-			return xsync.StrHash64(string(s))
-		})
+		return xsync.NewMapOfPresized[data.SeqType, []string](len(data.AllSeqTypes))
 	})
-
 	seqs, _ := seqsByType.LoadOrCompute(seqType, func() []string {
 		var parseSeq data.ParseSeq
 		if v == V1 || v == V2 {
@@ -137,7 +132,6 @@ func (v Version) Sequences(seqType data.SeqType) []string {
 
 		return parseSeq(seqType, v.FileBytes(fileType))
 	})
-
 	return seqs
 }
 
@@ -145,8 +139,8 @@ func (v Version) Sequences(seqType data.SeqType) []string {
 // Unexported symbols
 
 var (
-	rangeTables = xsync.NewIntegerMapOf[Version, *xsync.MapOf[data.Property, *unicode.RangeTable]]()
-	sequences   = xsync.NewIntegerMapOf[Version, *xsync.MapOf[data.SeqType, []string]]()
+	rangeTables = xsync.NewMapOf[Version, *xsync.MapOf[data.Property, *unicode.RangeTable]]()
+	sequences   = xsync.NewMapOf[Version, *xsync.MapOf[data.SeqType, []string]]()
 )
 
 func isRegionalIndicator(r rune) bool {
