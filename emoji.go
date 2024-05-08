@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"unicode"
 
-	"github.com/dmolesUC/emoji/data"
 	"github.com/puzpuzpuz/xsync/v3"
+	"libdb.so/go-emoji/data"
 )
 
 // ZWJ is the Unicode zero-width join character
 const ZWJ = '\u200d'
-
-// ------------------------------------------------------------
-// Misc functions
 
 // IsEmoji returns true if the specified rune has the (single-character)
 // Emoji property in the latest Emoji version, false otherwise

@@ -6,8 +6,8 @@ import (
 	"unicode"
 
 	"github.com/alecthomas/assert/v2"
-	"github.com/dmolesUC/emoji"
-	"github.com/dmolesUC/emoji/data"
+	"libdb.so/go-emoji"
+	"libdb.so/go-emoji/data"
 )
 
 // Sample of emoji newly introduced by version

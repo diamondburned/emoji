@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
-	"github.com/dmolesUC/emoji"
-	"github.com/dmolesUC/emoji/data"
+	"libdb.so/go-emoji"
+	"libdb.so/go-emoji/data"
 )
 
 // TODO: figure out what (if anything) was *added* in each version

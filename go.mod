@@ -1,4 +1,4 @@
-module github.com/dmolesUC/emoji
+module libdb.so/go-emoji
 
 go 1.20
 
