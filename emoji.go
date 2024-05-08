@@ -5,6 +5,7 @@ import (
 	"unicode"
 
 	. "github.com/dmolesUC/emoji/data"
+	"github.com/puzpuzpuz/xsync"
 )
 
 // ZWJ is the Unicode zero-width join character
@@ -101,30 +102,26 @@ func (v Version) FileBytes(t FileType) []byte {
 // source files from Unicode.org; ranges are guaranteed not to overlap, as per the RangeTable
 // docs, but adjacent ranges are not coalesced.
 func (v Version) RangeTable(property Property) *unicode.RangeTable {
-	var exists bool
-	var rtsByProperty map[Property]*unicode.RangeTable
-	if rtsByProperty, exists = rangeTables[v]; !exists {
-		rtsByProperty = map[Property]*unicode.RangeTable{}
-		rangeTables[v] = rtsByProperty
-	}
-	var rt *unicode.RangeTable
-	if rt, exists = rtsByProperty[property]; !exists {
-		rt = ParseRangeTable(property, v.FileBytes(Data))
-		rtsByProperty[property] = rt
-	}
+	rtsByProperty, _ := rangeTables.LoadOrCompute(v, func() *xsync.MapOf[Property, *unicode.RangeTable] {
+		return xsync.NewTypedMapOf[Property, *unicode.RangeTable](func(p Property) uint64 {
+			return xsync.StrHash64(string(p))
+		})
+	})
+	rt, _ := rtsByProperty.LoadOrCompute(property, func() *unicode.RangeTable {
+		return ParseRangeTable(property, v.FileBytes(Data))
+	})
 	return rt
 }
 
 // Sequences returns the Unicode emoji sequences of the specified type in this Emoji version.
 func (v Version) Sequences(seqType SeqType) []string {
-	var exists bool
-	var seqsByType map[SeqType][]string
-	if seqsByType, exists = sequences[v]; !exists {
-		seqsByType = map[SeqType][]string{}
-		sequences[v] = seqsByType
-	}
-	var seqs []string
-	if seqs, exists = seqsByType[seqType]; !exists {
+	seqsByType, _ := sequences.LoadOrCompute(v, func() *xsync.MapOf[SeqType, []string] {
+		return xsync.NewTypedMapOf[SeqType, []string](func(s SeqType) uint64 {
+			return xsync.StrHash64(string(s))
+		})
+	})
+
+	seqs, _ := seqsByType.LoadOrCompute(seqType, func() []string {
 		var parseSeq ParseSeq
 		if v == V1 || v == V2 {
 			parseSeq = ParseSequencesLegacy
@@ -141,18 +138,19 @@ func (v Version) Sequences(seqType SeqType) []string {
 			fileType = Sequences
 		}
 
-		seqs = parseSeq(seqType, v.FileBytes(fileType))
-		seqsByType[seqType] = seqs
-	}
+		return parseSeq(seqType, v.FileBytes(fileType))
+	})
+
 	return seqs
 }
 
 // ------------------------------------------------------------
 // Unexported symbols
 
-var rangeTables = map[Version]map[Property]*unicode.RangeTable{}
-
-var sequences = map[Version]map[SeqType][]string{}
+var (
+	rangeTables = xsync.NewIntegerMapOf[Version, *xsync.MapOf[Property, *unicode.RangeTable]]()
+	sequences   = xsync.NewIntegerMapOf[Version, *xsync.MapOf[SeqType, []string]]()
+)
 
 func isRegionalIndicator(r rune) bool {
 	return unicode.Is(RegionalIndicator, r)
