@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unicode"
 
-	. "github.com/dmolesUC/emoji/data"
+	"github.com/dmolesUC/emoji/data"
 	"github.com/puzpuzpuz/xsync"
 )
 
@@ -17,7 +17,7 @@ const ZWJ = '\u200d'
 // IsEmoji returns true if the specified rune has the (single-character)
 // Emoji property in the latest Emoji version, false otherwise
 func IsEmoji(r rune) bool {
-	return unicode.Is(Latest.RangeTable(Emoji), r)
+	return unicode.Is(Latest.RangeTable(data.Emoji), r)
 }
 
 // DisplayWidth attempts to guess at the display width of a string containing
@@ -82,14 +82,14 @@ func (v Version) String() string {
 // otherwise. E.g., ZWJ (zero width joiner) sequences were introduced only in
 // Emoji version 2.0, test files in version 4.0, and variation sequences in version
 // 5.0.
-func (v Version) HasFile(t FileType) bool {
+func (v Version) HasFile(t data.FileType) bool {
 	return t.HasData(int(v))
 }
 
 // FileBytes returns the byte data of the Unicode.org source file of the specified type
 // for this version, e.g. V12.FileBytes(Sequences) returns the contents of the file
 // http://unicode.org/Public/emoji/12.0/emoji-sequences.txt
-func (v Version) FileBytes(t FileType) []byte {
+func (v Version) FileBytes(t data.FileType) []byte {
 	bytes, err := t.GetBytes(int(v))
 	if err == nil {
 		return bytes
@@ -101,41 +101,41 @@ func (v Version) FileBytes(t FileType) []byte {
 // in this Emoji version. Note that the range table reflects the ranges as defined in the
 // source files from Unicode.org; ranges are guaranteed not to overlap, as per the RangeTable
 // docs, but adjacent ranges are not coalesced.
-func (v Version) RangeTable(property Property) *unicode.RangeTable {
-	rtsByProperty, _ := rangeTables.LoadOrCompute(v, func() *xsync.MapOf[Property, *unicode.RangeTable] {
-		return xsync.NewTypedMapOf[Property, *unicode.RangeTable](func(p Property) uint64 {
+func (v Version) RangeTable(property data.Property) *unicode.RangeTable {
+	rtsByProperty, _ := rangeTables.LoadOrCompute(v, func() *xsync.MapOf[data.Property, *unicode.RangeTable] {
+		return xsync.NewTypedMapOf[data.Property, *unicode.RangeTable](func(p data.Property) uint64 {
 			return xsync.StrHash64(string(p))
 		})
 	})
 	rt, _ := rtsByProperty.LoadOrCompute(property, func() *unicode.RangeTable {
-		return ParseRangeTable(property, v.FileBytes(Data))
+		return data.ParseRangeTable(property, v.FileBytes(data.Data))
 	})
 	return rt
 }
 
 // Sequences returns the Unicode emoji sequences of the specified type in this Emoji version.
-func (v Version) Sequences(seqType SeqType) []string {
-	seqsByType, _ := sequences.LoadOrCompute(v, func() *xsync.MapOf[SeqType, []string] {
-		return xsync.NewTypedMapOf[SeqType, []string](func(s SeqType) uint64 {
+func (v Version) Sequences(seqType data.SeqType) []string {
+	seqsByType, _ := sequences.LoadOrCompute(v, func() *xsync.MapOf[data.SeqType, []string] {
+		return xsync.NewTypedMapOf[data.SeqType, []string](func(s data.SeqType) uint64 {
 			return xsync.StrHash64(string(s))
 		})
 	})
 
 	seqs, _ := seqsByType.LoadOrCompute(seqType, func() []string {
-		var parseSeq ParseSeq
+		var parseSeq data.ParseSeq
 		if v == V1 || v == V2 {
-			parseSeq = ParseSequencesLegacy
+			parseSeq = data.ParseSequencesLegacy
 		} else {
-			parseSeq = ParseSequences
+			parseSeq = data.ParseSequences
 		}
 
-		var fileType FileType
+		var fileType data.FileType
 		if v == V1 {
-			fileType = Data
-		} else if seqType == Emoji_ZWJ_Sequence {
-			fileType = ZWJSequences
+			fileType = data.Data
+		} else if seqType == data.Emoji_ZWJ_Sequence {
+			fileType = data.ZWJSequences
 		} else {
-			fileType = Sequences
+			fileType = data.Sequences
 		}
 
 		return parseSeq(seqType, v.FileBytes(fileType))
@@ -148,21 +148,21 @@ func (v Version) Sequences(seqType SeqType) []string {
 // Unexported symbols
 
 var (
-	rangeTables = xsync.NewIntegerMapOf[Version, *xsync.MapOf[Property, *unicode.RangeTable]]()
-	sequences   = xsync.NewIntegerMapOf[Version, *xsync.MapOf[SeqType, []string]]()
+	rangeTables = xsync.NewIntegerMapOf[Version, *xsync.MapOf[data.Property, *unicode.RangeTable]]()
+	sequences   = xsync.NewIntegerMapOf[Version, *xsync.MapOf[data.SeqType, []string]]()
 )
 
 func isRegionalIndicator(r rune) bool {
-	return unicode.Is(RegionalIndicator, r)
+	return unicode.Is(data.RegionalIndicator, r)
 }
 
 func isSkinToneModifier(r rune) bool {
-	return unicode.Is(EmojiSkinToneModifier, r)
+	return unicode.Is(data.EmojiSkinToneModifier, r)
 }
 
 func isZeroWidth(r rune) bool {
 	return r == ZWJ ||
 		unicode.Is(unicode.Variation_Selector, r) ||
-		unicode.Is(CombiningDiacritical, r) ||
-		unicode.Is(Tag, r)
+		unicode.Is(data.CombiningDiacritical, r) ||
+		unicode.Is(data.Tag, r)
 }
